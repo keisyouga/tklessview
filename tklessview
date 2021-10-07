@@ -51,11 +51,15 @@ proc read_file_internal {w f} {
 	}
 }
 
-# cancel action, ready to command
-proc do_cancel {} {
+proc get_ready {} {
 	global preceding_number
 	focus .ctext.t
 	set preceding_number ""
+}
+
+# cancel action, ready to command
+proc do_cancel {} {
+	get_ready
 }
 
 # append digit to precedence number
@@ -67,7 +71,7 @@ proc do_number {d} {
 # open (examine) new file
 proc do_examine {} {
 	read_file .ctext [.file.name get]
-	do_cancel
+	get_ready
 }
 
 # set file label "current/max"
@@ -75,6 +79,43 @@ proc set_file_number {} {
 	set cur [expr 1 + [.file.name current]]
 	set max [llength [.file.name cget -values]]
 	.file.number configure -text "$cur/$max"
+}
+
+# return preceding number or default
+# d: if no preceding_number, return d
+proc get_precedence {d} {
+	global preceding_number
+	if {$preceding_number ne ""} {
+		return $preceding_number
+	} else {
+		return $d
+	}
+}
+
+# scroll line.
+# cursor(insert) is moved also.
+# sign: + or -
+proc scroll_line {sign} {
+	global preceding_number
+	set w .ctext
+
+	set num [get_precedence 1]
+
+	set pos [expr [$w index insert] $sign $num]
+	puts $pos
+	$w mark set insert $pos
+	$w yview insert
+	get_ready
+}
+
+# scroll lines forward
+proc do_forward_line {} {
+	scroll_line +
+}
+
+# scroll lines backward
+proc do_backward_line {} {
+	scroll_line -
 }
 
 ################################################################
@@ -126,8 +167,8 @@ bind .ctext <h> {not_implemented help}
 bind .ctext <H> {not_implemented help}
 
 # scrolling
-bind .ctext <j> {not_implemented forward_line}
-bind .ctext <k> {not_implemented backward_line}
+bind .ctext <j> {do_forward_line}
+bind .ctext <k> {do_backward_line}
 bind .ctext <f> {not_implemented forward_window}
 bind .ctext <b> {not_implemented backward_window}
 
