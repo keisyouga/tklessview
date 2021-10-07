@@ -5,7 +5,6 @@
 package require Tk
 package require ctext
 
-
 ################################################################
 # functions
 
@@ -144,6 +143,7 @@ proc do_forward_page {} {
 proc do_backward_page {} {
 	scroll_page - [get_precedence 1]
 }
+
 ################################################################
 # variables
 
