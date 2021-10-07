@@ -104,11 +104,9 @@ proc get_precedence {d} {
 # scroll line.
 # cursor(insert) is moved also.
 # sign: + or -
-proc scroll_line {sign} {
-	global preceding_number
+# num: number of lines to scroll
+proc scroll_line {sign num} {
 	set w .ctext
-
-	set num [get_precedence 1]
 
 	set pos [expr [$w index insert] $sign $num]
 	$w mark set insert $pos
@@ -118,14 +116,34 @@ proc scroll_line {sign} {
 
 # scroll lines forward
 proc do_forward_line {} {
-	scroll_line +
+	scroll_line + [get_precedence 1]
 }
 
 # scroll lines backward
 proc do_backward_line {} {
-	scroll_line -
+	scroll_line - [get_precedence 1]
 }
 
+# return number of lines in a window
+proc get_window_lines {w} {
+	$w count -lines [$w index @0,0] [$w index @0,[winfo height $w]]
+}
+
+# scroll pages
+proc scroll_page {sign num} {
+	set n_lines [expr [get_window_lines .ctext] * $num]
+	scroll_line $sign $n_lines
+}
+
+# scroll pages forward
+proc do_forward_page {} {
+	scroll_page + [get_precedence 1]
+}
+
+# scroll pages backward
+proc do_backward_page {} {
+	scroll_page - [get_precedence 1]
+}
 ################################################################
 # variables
 
@@ -177,8 +195,8 @@ bind .ctext <H> {not_implemented help}
 # scrolling
 bind .ctext <j> {do_forward_line}
 bind .ctext <k> {do_backward_line}
-bind .ctext <f> {not_implemented forward_window}
-bind .ctext <b> {not_implemented backward_window}
+bind .ctext <f> {do_forward_page}
+bind .ctext <b> {do_backward_page}
 
 # cancel
 bind . <Escape> do_cancel
