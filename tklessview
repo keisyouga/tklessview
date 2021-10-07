@@ -129,34 +129,86 @@ proc scroll_line {sign num} {
 }
 
 # scroll lines forward
-proc do_forward_line {} {
-	scroll_line + [get_precedence 1]
+proc do_forward_line {{sign +}} {
+	scroll_line $sign [get_precedence 1]
 }
 
 # scroll lines backward
 proc do_backward_line {} {
-	scroll_line - [get_precedence 1]
+	do_forward_line -
 }
 
-# return number of lines in a window
-proc get_window_lines {w} {
+# calculate number of lines in a window
+proc calculate_window_lines {w} {
 	$w count -lines [$w index @0,0] [$w index @0,[winfo height $w]]
 }
 
 # scroll pages
-proc scroll_page {sign num} {
-	set n_lines [expr [get_window_lines .ctext] * $num]
-	scroll_line $sign $n_lines
+proc scroll_page {sign} {
+	global window_lines
+	if {$window_lines ne ""} {
+		scroll_line $sign $window_lines
+	} else {
+		scroll_line $sign [calculate_window_lines .ctext]
+	}
 }
 
 # scroll pages forward
-proc do_forward_page {} {
-	scroll_page + [get_precedence 1]
+proc do_forward_page {{sign +}} {
+	set num [get_precedence 0]
+	if {$num eq 0} {
+		scroll_page $sign
+	} else {
+		scroll_line $sign $num
+	}
 }
 
 # scroll pages backward
 proc do_backward_page {} {
-	scroll_page - [get_precedence 1]
+	do_forward_page -
+}
+
+
+# scroll pages forward and set
+proc do_forward_page_set {{sign +}} {
+	global window_lines
+	set num [get_precedence 0]
+	if {$num > 0} {
+		# set window line size
+		set window_lines $num
+	}
+	scroll_page $sign
+}
+
+# scroll pages backward and set
+proc do_backward_page_set {} {
+	do_forward_page_set -
+}
+
+# scroll forward half page and set
+proc do_forward_window_half_set {{sign +}} {
+	global half_window_lines
+	set num [get_precedence 0]
+
+	if {$num > 0} {
+		# set half window line size
+		set half_window_lines $num
+	}
+
+	if {$half_window_lines eq ""} {
+		# calculate half window lines
+		# half_window_lines is unchanged
+		set w .ctext
+		set num [expr [calculate_window_lines $w] / 2]
+	} else {
+		set num $half_window_lines
+	}
+	scroll_line $sign $num
+}
+
+# scroll backward half page and set
+proc do_backward_window_half_set {} {
+	do_forward_window_half_set -
 }
 
 # version
@@ -230,6 +282,12 @@ set preceding_number ""
 # current file name
 set filename ""
 
+# scroll page size
+set window_lines ""
+
+# half scroll page size
+set half_window_lines ""
+
 ################################################################
 # main window
 
@@ -273,16 +331,18 @@ foreach seq {y Control-y k K Control-k Control-p Up} {
 	bind .ctext <$seq> {do_backward_line}
 }
 foreach seq {f Control-f Control-v space Next} {
-	bind .ctext <f> {do_forward_page}
+	bind .ctext <$seq> {do_forward_page}
 }
 foreach seq {b Control-b Alt-v Shift-space Prior} {
-	bind .ctext <b> {do_backward_page}
+	bind .ctext <$seq> {do_backward_page}
 }
+bind .ctext <z> {do_forward_page_set}
+bind .ctext <w> {do_backward_page_set}
 foreach seq {d Control-d} {
-	bind .ctext <$seq> {not_implemented forward_window_half}
+	bind .ctext <$seq> {do_forward_window_half_set}
 }
 foreach seq {u Control-u} {
-	bind .ctext <$seq> {not_implemented backward_window_half}
+	bind .ctext <$seq> {do_backward_window_half_set}
 }
 
 # cancel
