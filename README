@@ -1,0 +1,8 @@
+tklessview
+  less-like text viewer written in tcl/tk
+  
+usage:
+  tklessview [filename]...
+
+command:
+  see manpage less(1)
