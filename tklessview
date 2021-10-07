@@ -158,6 +158,22 @@ proc do_backward_page {} {
 	scroll_page - [get_precedence 1]
 }
 
+# version
+proc do_version {} {
+	tk_messageBox -title "tklessview" -message "less-like text viewer"
+}
+
+# help
+proc do_help {} {
+	tk_messageBox -title "help" -message "<q>	quit
+j	forward line
+k	backward line
+f	forward page
+b	backward page
+:e	examine file
+"
+}
+
 ################################################################
 # variables
 
@@ -201,10 +217,6 @@ bind .ctext <Q> do_quit
 bind .ctext <colon><q> do_quit
 bind .ctext <colon><Q> do_quit
 bind .ctext <Z><Z> do_quit
-
-# help
-bind .ctext <h> {not_implemented help}
-bind .ctext <H> {not_implemented help}
 
 # scrolling
 foreach seq {e Control-e j J Control-n Return Down} {
@@ -274,7 +286,10 @@ bind .ctext <apostrophe> {not_implemented do_jump_mark}
 # edit current file with editor
 bind .ctext <v> {not_implemented do_editor}
 # version
-bind .ctext <V> {not_implemented version}
+bind .ctext <V> {do_version}
+# help
+bind .ctext <h> {do_help}
+bind .ctext <H> {do_help}
 
 # open (examine) new file
 bind .file.name <Return> {do_examine}
