@@ -30,6 +30,8 @@ proc read_file {w name} {
 	set filename $name
 	set_file_number
 	set f [open $filename r]
+
+	# erase previous content
 	$w configure -state normal
 	$w delete 1.0 end
 
@@ -43,11 +45,16 @@ proc read_file {w name} {
 # this procedure is called by read_file
 proc read_file_internal {w f} {
 	if {![eof $f]} {
+		# save position
+		set pos [$w index insert]
+		$w configure -state normal
 		$w insert end [read $f 1024]
+		$w configure -state disabled
+		# restore position
+		$w mark set insert $pos
 		after 10 "read_file_internal $w $f"
 	} else {
 		close $f
-		$w configure -state disabled
 	}
 }
 
@@ -102,7 +109,6 @@ proc scroll_line {sign} {
 	set num [get_precedence 1]
 
 	set pos [expr [$w index insert] $sign $num]
-	puts $pos
 	$w mark set insert $pos
 	$w yview insert
 	get_ready
