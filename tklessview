@@ -273,6 +273,102 @@ proc do_goto_percent {} {
 	get_ready
 }
 
+# tag search_string and search next
+proc tag_text {} {
+	global search_string
+	global highlighted
+
+	set highlighted 1
+	set w .ctext
+
+	$w tag delete search
+	$w tag configure search -foreground yellow -background red
+	set curs [$w search -regexp -nocase -all -count lengths "$search_string" 1.0 end]
+	for {set i 0} {[lindex $curs $i] ne ""} {incr i} {
+		$w tag add search [lindex $curs $i] "[lindex $curs $i] + [lindex $lengths $i] char"
+	}
+}
+
+# search for new string
+proc do_search {} {
+	global search_forwards
+	tag_text
+	repeat_search $search_forwards
+}
+
+# prompt to search forward
+proc do_search_forward {} {
+	global search_forwards
+	set search_forwards 1
+	.file.sl configure -text "/"
+	focus .file.se
+}
+
+# prompt to search backward
+proc do_search_backward {} {
+	global search_forwards
+	set search_forwards 0
+	.file.sl configure -text "?"
+	focus .file.se
+}
+
+# move to next/prev search tag
+proc repeat_search {forwards} {
+	set w .ctext
+	# search count
+	set count [get_precedence 1]
+	# current cursor positoin
+	set cur [$w index insert]
+
+	while {$count > 0} {
+		# search tagname "search"
+		# if found, return first and last range of character
+		if {$forwards} {
+			set range [$w tag nextrange search "$cur + 1 char"]
+		} else {
+			set range [$w tag prevrange search "$cur - 1 char"]
+		}
+
+		# not found
+		if {$range eq ""} {
+			return
+		}
+		# store first character found
+		set cur [lindex $range 0]
+		incr count -1
+	}
+
+	set index [lindex $range 0]
+	$w mark set insert $index
+	$w yview insert
+	get_ready
+}
+
+# move to next search tag
+proc do_repeat_next_search {} {
+	global search_forwards
+	repeat_search $search_forwards
+}
+
+# move to previous search tag
+proc do_repeat_previous_search {} {
+	global search_forwards
+	repeat_search [expr !$search_forwards]
+}
+
+proc do_toggle_highlight {} {
+	global highlighted
+	set w .ctext
+	set tag search
+
+	if {$highlighted} {
+		$w tag configure $tag -foreground black -background white
+	} else {
+		$w tag configure $tag -foreground yellow -background red
+	}
+	set highlighted [expr !$highlighted]
+}
+
 ################################################################
 # variables
 
@@ -288,6 +384,15 @@ set window_lines ""
 # half scroll page size
 set half_window_lines ""
 
+# search string
+set search_string ""
+
+# search direction
+set search_forwards 1
+
+# highlight matched string
+set highlighted 1
+
 ################################################################
 # main window
 
@@ -297,6 +402,11 @@ ttk::combobox .file.name -textvariable filename
 label .file.number -text "0/0"
 pack .file.number .file.name -side left
 pack .file
+
+# search widget
+label .file.sl -text "/"
+entry .file.se -textvariable search_string
+pack .file.sl .file.se -side left
 
 # debug tcl command widget
 frame .tcl
@@ -366,13 +476,16 @@ bind .ctext <colon><n> {not_implemented do_next_file}
 bind .ctext <colon><p> {not_implemented do_previous_file}
 bind .ctext <colon><x> {not_implemented do_nth_file}
 bind .ctext <colon><d> {not_implemented do_remove_file}
+# open (examine) new file
+bind .file.name <Return> {do_examine}
 
 # searching
-bind .ctext <slash> {not_implemented do_search_forward}
-bind .ctext <question> {not_implemented do_search_backward}
-bind .ctext <Alt-u> {not_implemented toggle_highlight}
-bind .ctext <n> {not_implemented do_repeat_next_search}
-bind .ctext <N> {not_implemented do_repeat_previous_search}
+bind .ctext <slash> {do_search_forward}
+bind .ctext <question> {do_search_backward}
+bind .ctext <Alt-u> {do_toggle_highlight}
+bind .ctext <n> {do_repeat_next_search}
+bind .ctext <N> {do_repeat_previous_search}
+bind .file.se <Return> {do_search}
 
 # jumping
 foreach seq {g less Alt-less} {
@@ -397,9 +510,6 @@ bind .ctext <V> {do_version}
 # help
 bind .ctext <h> {do_help}
 bind .ctext <H> {do_help}
-
-# open (examine) new file
-bind .file.name <Return> {do_examine}
 
 # run tcl command
 bind .ctext <exclam> "focus .tcl.e"
