@@ -207,10 +207,24 @@ bind .ctext <h> {not_implemented help}
 bind .ctext <H> {not_implemented help}
 
 # scrolling
-bind .ctext <j> {do_forward_line}
-bind .ctext <k> {do_backward_line}
-bind .ctext <f> {do_forward_page}
-bind .ctext <b> {do_backward_page}
+foreach seq {e Control-e j J Control-n Return Down} {
+	bind .ctext <$seq> {do_forward_line}
+}
+foreach seq {y Control-y k K Control-k Control-p Up} {
+	bind .ctext <$seq> {do_backward_line}
+}
+foreach seq {f Control-f Control-v space Next} {
+	bind .ctext <f> {do_forward_page}
+}
+foreach seq {b Control-b Alt-v Shift-space Prior} {
+	bind .ctext <b> {do_backward_page}
+}
+foreach seq {d Control-d} {
+	bind .ctext <$seq> {not_implemented forward_window_half}
+}
+foreach seq {u Control-u} {
+	bind .ctext <$seq> {not_implemented backward_window_half}
+}
 
 # cancel
 bind . <Escape> do_cancel
@@ -229,6 +243,38 @@ bind .ctext 9 {do_number %K}
 
 # file open prompt
 bind .ctext <colon><e> {focus .file.name}
+bind .ctext <colon><n> {not_implemented do_next_file}
+bind .ctext <colon><p> {not_implemented do_previous_file}
+bind .ctext <colon><x> {not_implemented do_nth_file}
+bind .ctext <colon><d> {not_implemented do_remove_file}
+
+# searching
+bind .ctext <slash> {not_implemented do_search_forward}
+bind .ctext <question> {not_implemented do_search_backward}
+bind .ctext <Alt-u> {not_implemented toggle_highlight}
+bind .ctext <n> {not_implemented do_repeat_next_search}
+bind .ctext <N> {not_implemented do_repeat_previous_search}
+
+# jumping
+foreach seq {g less Alt-less} {
+	bind .ctext <$seq> {not_implemented goto_first}
+}
+foreach seq {G greater Alt-greater} {
+	bind .ctext <$seq> {not_implemented goto_last}
+}
+bind .ctext <p> {not_implemented goto_percent}
+bind .ctext <percent> {not_implemented goto_percent}
+
+# set mark
+bind .ctext <m> {not_implemented do_set_mark}
+# jump mark
+bind .ctext <apostrophe> {not_implemented do_jump_mark}
+
+# miscellaneous commands
+# edit current file with editor
+bind .ctext <v> {not_implemented do_editor}
+# version
+bind .ctext <V> {not_implemented version}
 
 # open (examine) new file
 bind .file.name <Return> {do_examine}
