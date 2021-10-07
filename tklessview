@@ -35,8 +35,10 @@ proc read_file {w name} {
 	$w configure -state normal
 	$w delete 1.0 end
 
-	# cancel previous open file event
-	foreach i [after info] {puts [after cancel $i]}
+	# cancel previous read_file_internal event
+	foreach i [after info] {
+		after cancel $i
+	}
 
 	# read asynchronous
 	read_file_internal $w $f
