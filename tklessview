@@ -20,15 +20,28 @@ proc do_quit {} {
 	destroy .
 }
 
+# append name to combobox
+proc append_file_name {name} {
+	set files [.file.name cget -values]
+	if {[lsearch -exact $files $name] < 0} {
+		.file.name configure -values [concat $files $name]
+	}
+}
+
+
 # read file and insert its content into text widget
 proc read_file {w name} {
 	global filename
 	if {!([file isfile $name] && [file readable $name])} {
 		return
 	}
+
 	set filename $name
-	set_file_number
 	set f [open $filename r]
+
+	# set combobox, label
+	append_file_name $name
+	set_file_number
 
 	# erase previous content
 	$w configure -state normal
@@ -78,7 +91,8 @@ proc do_number {d} {
 
 # open (examine) new file
 proc do_examine {} {
-	read_file .ctext [.file.name get]
+	set name [.file.name get]
+	read_file .ctext $name
 	get_ready
 }
 
