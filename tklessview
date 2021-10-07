@@ -72,6 +72,7 @@ proc read_file_internal {w f} {
 	}
 }
 
+# prepare commands
 proc get_ready {} {
 	global preceding_number
 	focus .ctext.t
@@ -174,6 +175,52 @@ b	backward page
 "
 }
 
+# go to line num in the file
+proc goto_line {num} {
+	set w .ctext
+	$w mark set insert $num.0
+	$w yview insert
+	get_ready
+}
+
+# go to last
+proc goto_last {} {
+	set w .ctext
+	$w mark set insert end
+	$w yview insert
+	# move cursor to top of widget
+	$w mark set insert [$w index @0,0]
+	get_ready
+}
+
+# go to first or preceding_number line
+proc do_goto_first {} {
+	set num [get_precedence 1]
+	goto_line $num
+}
+
+# go to last or preceding_number line
+proc do_goto_last {} {
+	set num [get_precedence ""]
+	if {$num ne ""} {
+		goto_line $num
+	} else {
+		goto_last
+	}
+}
+
+# move to $preceded_number percent of whole buffer
+proc do_goto_percent {} {
+	set num [get_precedence 0]
+	set fraction [expr $num / 100.0]
+	set w .ctext
+	$w yview moveto $fraction
+	# move cursor to top of widget
+	$w mark set insert [$w index @0,0]
+
+	get_ready
+}
+
 ################################################################
 # variables
 
@@ -269,13 +316,13 @@ bind .ctext <N> {not_implemented do_repeat_previous_search}
 
 # jumping
 foreach seq {g less Alt-less} {
-	bind .ctext <$seq> {not_implemented goto_first}
+	bind .ctext <$seq> {do_goto_first}
 }
 foreach seq {G greater Alt-greater} {
-	bind .ctext <$seq> {not_implemented goto_last}
+	bind .ctext <$seq> {do_goto_last}
 }
-bind .ctext <p> {not_implemented goto_percent}
-bind .ctext <percent> {not_implemented goto_percent}
+bind .ctext <p> {do_goto_percent}
+bind .ctext <percent> {do_goto_percent}
 
 # set mark
 bind .ctext <m> {not_implemented do_set_mark}
