@@ -44,7 +44,6 @@ proc read_file {w name} {
 	set_file_number
 
 	# erase previous content
-	$w configure -state normal
 	$w delete 1.0 end
 
 	# cancel previous read_file_internal event
@@ -61,9 +60,7 @@ proc read_file_internal {w f} {
 	if {![eof $f]} {
 		# save position
 		set pos [$w index insert]
-		$w configure -state normal
 		$w insert end [read $f 1024]
-		$w configure -state disabled
 		# restore position
 		$w mark set insert $pos
 		after 10 "read_file_internal $w $f"
@@ -75,7 +72,7 @@ proc read_file_internal {w f} {
 # prepare commands
 proc get_ready {} {
 	global preceding_number
-	focus .ctext.t
+	focus .command
 	set preceding_number ""
 }
 
@@ -149,7 +146,8 @@ proc scroll_page {sign} {
 	if {$window_lines ne ""} {
 		scroll_line $sign $window_lines
 	} else {
-		scroll_line $sign [calculate_window_lines .ctext]
+		set w .ctext
+		scroll_line $sign [calculate_window_lines $w]
 	}
 }
 
@@ -421,98 +419,101 @@ ctext .ctext -yscrollcommand ".scroll set" -setgrid true -wrap none
 ttk::scrollbar .scroll -command ".ctext yview"
 pack .scroll -side right -fill y
 pack .ctext -expand yes -fill both
-.ctext configure -state disabled
 
 ################################################################
 # commands
 
+# avoid conflicts with text widget's built-in binding,
+# use invisible widget to receive keyboard event
+pack [label .command]
+
 # exit program
-bind .ctext <q> do_quit
-bind .ctext <Q> do_quit
-bind .ctext <colon><q> do_quit
-bind .ctext <colon><Q> do_quit
-bind .ctext <Z><Z> do_quit
+bind .command <q> do_quit
+bind .command <Q> do_quit
+bind .command <colon><q> do_quit
+bind .command <colon><Q> do_quit
+bind .command <Z><Z> do_quit
 
 # scrolling
 foreach seq {e Control-e j J Control-n Return Down} {
-	bind .ctext <$seq> {do_forward_line}
+	bind .command <$seq> {do_forward_line}
 }
 foreach seq {y Control-y k K Control-k Control-p Up} {
-	bind .ctext <$seq> {do_backward_line}
+	bind .command <$seq> {do_backward_line}
 }
 foreach seq {f Control-f Control-v space Next} {
-	bind .ctext <$seq> {do_forward_page}
+	bind .command <$seq> {do_forward_page}
 }
 foreach seq {b Control-b Alt-v Shift-space Prior} {
-	bind .ctext <$seq> {do_backward_page}
+	bind .command <$seq> {do_backward_page}
 }
-bind .ctext <z> {do_forward_page_set}
-bind .ctext <w> {do_backward_page_set}
+bind .command <z> {do_forward_page_set}
+bind .command <w> {do_backward_page_set}
 foreach seq {d Control-d} {
-	bind .ctext <$seq> {do_forward_window_half_set}
+	bind .command <$seq> {do_forward_window_half_set}
 }
 foreach seq {u Control-u} {
-	bind .ctext <$seq> {do_backward_window_half_set}
+	bind .command <$seq> {do_backward_window_half_set}
 }
 
 # cancel
 bind . <Escape> do_cancel
 
 # number
-bind .ctext 0 {do_number %K}
-bind .ctext 1 {do_number %K}
-bind .ctext 2 {do_number %K}
-bind .ctext 3 {do_number %K}
-bind .ctext 4 {do_number %K}
-bind .ctext 5 {do_number %K}
-bind .ctext 6 {do_number %K}
-bind .ctext 7 {do_number %K}
-bind .ctext 8 {do_number %K}
-bind .ctext 9 {do_number %K}
+bind .command 0 {do_number %K}
+bind .command 1 {do_number %K}
+bind .command 2 {do_number %K}
+bind .command 3 {do_number %K}
+bind .command 4 {do_number %K}
+bind .command 5 {do_number %K}
+bind .command 6 {do_number %K}
+bind .command 7 {do_number %K}
+bind .command 8 {do_number %K}
+bind .command 9 {do_number %K}
 
 # file open prompt
-bind .ctext <colon><e> {focus .file.name}
-bind .ctext <colon><n> {not_implemented do_next_file}
-bind .ctext <colon><p> {not_implemented do_previous_file}
-bind .ctext <colon><x> {not_implemented do_nth_file}
-bind .ctext <colon><d> {not_implemented do_remove_file}
+bind .command <colon><e> {focus .file.name}
+bind .command <colon><n> {not_implemented do_next_file}
+bind .command <colon><p> {not_implemented do_previous_file}
+bind .command <colon><x> {not_implemented do_nth_file}
+bind .command <colon><d> {not_implemented do_remove_file}
 # open (examine) new file
 bind .file.name <Return> {do_examine}
 
 # searching
-bind .ctext <slash> {do_search_forward}
-bind .ctext <question> {do_search_backward}
-bind .ctext <Alt-u> {do_toggle_highlight}
-bind .ctext <n> {do_repeat_next_search}
-bind .ctext <N> {do_repeat_previous_search}
+bind .command <slash> {do_search_forward}
+bind .command <question> {do_search_backward}
+bind .command <Alt-u> {do_toggle_highlight}
+bind .command <n> {do_repeat_next_search}
+bind .command <N> {do_repeat_previous_search}
 bind .file.se <Return> {do_search}
 
 # jumping
 foreach seq {g less Alt-less} {
-	bind .ctext <$seq> {do_goto_first}
+	bind .command <$seq> {do_goto_first}
 }
 foreach seq {G greater Alt-greater} {
-	bind .ctext <$seq> {do_goto_last}
+	bind .command <$seq> {do_goto_last}
 }
-bind .ctext <p> {do_goto_percent}
-bind .ctext <percent> {do_goto_percent}
+bind .command <p> {do_goto_percent}
+bind .command <percent> {do_goto_percent}
 
 # set mark
-bind .ctext <m> {not_implemented do_set_mark}
+bind .command <m> {not_implemented do_set_mark}
 # jump mark
-bind .ctext <apostrophe> {not_implemented do_jump_mark}
+bind .command <apostrophe> {not_implemented do_jump_mark}
 
 # miscellaneous commands
 # edit current file with editor
-bind .ctext <v> {not_implemented do_editor}
+bind .command <v> {not_implemented do_editor}
 # version
-bind .ctext <V> {do_version}
+bind .command <V> {do_version}
 # help
-bind .ctext <h> {do_help}
-bind .ctext <H> {do_help}
+bind .command <h> {do_help}
+bind .command <H> {do_help}
 
 # run tcl command
-bind .ctext <exclam> "focus .tcl.e"
+bind .command <exclam> "focus .tcl.e"
 
 ################################################################
 # program start
@@ -525,7 +526,7 @@ set filename [lindex [.file.name cget -values] 0]
 read_file .ctext $filename
 
 # wait the command
-focus .ctext.t
+focus .command
 
 # Local variables:
 # indent-tabs-mode: t
