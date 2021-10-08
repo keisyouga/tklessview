@@ -232,12 +232,18 @@ proc do_version {} {
 
 # help
 proc do_help {} {
-	tk_messageBox -title "help" -message "<q>	quit
+	tk_messageBox -title "help" -message \
+	    "q	quit
+h	help
 j	forward line
 k	backward line
 f	forward page
 b	backward page
 :e	examine file
+/	search forward
+?	search backward
+n	repeat search
+N	reverse search
 "
 }
 
