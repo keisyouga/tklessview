@@ -20,7 +20,7 @@ proc do_quit {} {
 	destroy .
 }
 
-# append name to combobox
+# append new name to combobox
 proc append_file_name {name} {
 	set files [.bar.fname cget -values]
 	if {[lsearch -exact $files $name] < 0} {
@@ -28,16 +28,30 @@ proc append_file_name {name} {
 	}
 }
 
+# remove all name from combobox
+proc remove_file_name {name} {
+	set files [.bar.fname cget -values]
+	set newfiles [lsearch -exact -all -not -inline $files $name]
+	.bar.fname configure -values $newfiles
+	set_file_number
+}
 
 # read file and insert its content into text widget
+# return name if success to open file
 proc read_file {w name} {
-	global filename
+	global current_filename
+	global entry_filename
 	if {!([file isfile $name] && [file readable $name])} {
+		# remove name from combobox's file list
+		remove_file_name $name
+		set entry_filename $current_filename
+		set_file_number
 		return
 	}
 
-	set filename $name
-	set f [open $filename r]
+	set current_filename $name
+	set entry_filename $name
+	set f [open $current_filename r]
 
 	# set combobox, label
 	append_file_name $name
@@ -53,6 +67,8 @@ proc read_file {w name} {
 
 	# read asynchronous
 	read_file_internal $w $f
+
+	return $name
 }
 
 # this procedure is called by read_file
@@ -374,6 +390,41 @@ proc do_toggle_highlight {} {
 	set highlighted [expr !$highlighted]
 }
 
+proc read_nth_file {n} {
+	read_file .ctext [lindex [.bar.fname cget -values] $n]
+	get_ready
+}
+
+# read nth file in file list
+proc do_nth_file {} {
+	set num [get_precedence 0]
+
+	if {$num > 0} {
+		incr num -1
+	}
+	read_nth_file $num
+}
+
+# read next file in file list
+proc do_next_file {} {
+	set cur [expr 1 + [.bar.fname current]]
+	set num [get_precedence 1]
+	read_nth_file [expr $cur + $num]
+}
+
+# read previous file in file list
+proc do_previous_file {} {
+	set cur [expr 1 + [.bar.fname current]]
+	set num [get_precedence 1]
+	read_nth_file [expr $cur - $num]
+}
+
+# remove name from file list
+proc do_remove_file {} {
+	global entry_filename
+	remove_file_name $entry_filename
+}
+
 ################################################################
 # variables
 
@@ -381,7 +432,10 @@ proc do_toggle_highlight {} {
 set preceding_number ""
 
 # current file name
-set filename ""
+set current_filename ""
+
+# file name displayed in the entry box
+set entry_filename ""
 
 # scroll page size
 set window_lines ""
@@ -409,7 +463,7 @@ entry .bar.pre -textvariable preceding_number -width 6
 pack .bar.pre -side left
 
 # filename widget
-ttk::combobox .bar.fname -textvariable filename
+ttk::combobox .bar.fname -textvariable entry_filename
 label .bar.fno -text "0/0"
 pack .bar.fno -side left
 pack .bar.fname -side left -expand 1 -fill x
@@ -487,14 +541,19 @@ bind .command 7 {do_number %K}
 bind .command 8 {do_number %K}
 bind .command 9 {do_number %K}
 
-# file open prompt
+# file examine prompt
 bind .command <colon><e> {focus .bar.fname}
-bind .command <colon><n> {not_implemented do_next_file}
-bind .command <colon><p> {not_implemented do_previous_file}
-bind .command <colon><x> {not_implemented do_nth_file}
-bind .command <colon><d> {not_implemented do_remove_file}
+# examine next file
+bind .command <colon><n> {do_next_file}
+# examine previous file
+bind .command <colon><p> {do_previous_file}
+# examine nth file
+bind .command <colon><x> {do_nth_file}
+# remove file from file list
+bind .command <colon><d> {do_remove_file}
 # open (examine) new file
 bind .bar.fname <Return> {do_examine}
+bind .bar.fname <<ComboboxSelected>> {do_examine}
 
 # searching
 bind .command <slash> {do_search_forward}
@@ -528,6 +587,15 @@ bind .command <V> {do_version}
 bind .command <h> {do_help}
 bind .command <H> {do_help}
 
+# line number
+# toggle line number
+bind .command <minus><N> {
+	set value [.ctext cget -linemap]
+	.ctext configure -linemap [expr !$value]
+}
+# disable line number
+bind .command <minus><n> { .ctext configure -linemap 0}
+
 # run tcl command
 bind .command <exclam> "focus .tcl.e"
 
@@ -535,11 +603,22 @@ bind .command <exclam> "focus .tcl.e"
 # program start
 
 # fill combobox with $argv
-.bar.fname configure -values $argv
+foreach i $argv {
+	append_file_name $i
+}
 
-# read first argument
-set filename [lindex [.bar.fname cget -values] 0]
-read_file .ctext $filename
+# read first readable argument
+while 1 {
+	# get list from combobox
+	set v [.bar.fname cget -values]
+	if {$v eq ""} {break;}
+	set f [lindex $v 0]
+	# if not readable, read_file return "" and remove name from combobox
+	if {[read_file .ctext $f] ne ""} {
+		# file was read
+		break;
+	}
+}
 
 # wait the command
 focus .command
