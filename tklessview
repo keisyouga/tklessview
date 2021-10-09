@@ -396,12 +396,14 @@ proc do_toggle_highlight {} {
 	set highlighted [expr !$highlighted]
 }
 
+# read nth file in file list
+# index start from 0
 proc read_nth_file {n} {
 	read_file .ctext [lindex [.bar.fname cget -values] $n]
 	get_ready
 }
 
-# read nth file in file list
+# read $preceded_number-th file in file list
 proc do_nth_file {} {
 	set num [get_precedence 0]
 
@@ -413,14 +415,14 @@ proc do_nth_file {} {
 
 # read next file in file list
 proc do_next_file {} {
-	set cur [expr 1 + [.bar.fname current]]
+	set cur [.bar.fname current]
 	set num [get_precedence 1]
 	read_nth_file [expr $cur + $num]
 }
 
 # read previous file in file list
 proc do_previous_file {} {
-	set cur [expr 1 + [.bar.fname current]]
+	set cur [.bar.fname current]
 	set num [get_precedence 1]
 	read_nth_file [expr $cur - $num]
 }
@@ -549,6 +551,7 @@ bind .command 9 {do_number %K}
 
 # file examine prompt
 bind .command <colon><e> {focus .bar.fname}
+bind .command <Control-x><Control-v> {focus .bar.fname}
 # examine next file
 bind .command <colon><n> {do_next_file}
 # examine previous file
