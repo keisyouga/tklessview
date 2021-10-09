@@ -41,6 +41,8 @@ proc remove_file_name {name} {
 proc read_file {w name} {
 	global current_filename
 	global entry_filename
+	global done_reading
+
 	if {!([file isfile $name] && [file readable $name])} {
 		# remove name from combobox's file list
 		remove_file_name $name
@@ -66,6 +68,7 @@ proc read_file {w name} {
 	}
 
 	# read asynchronous
+	set done_reading 0
 	read_file_internal $w $f
 
 	return $name
@@ -73,6 +76,8 @@ proc read_file {w name} {
 
 # this procedure is called by read_file
 proc read_file_internal {w f} {
+	global done_reading
+
 	if {![eof $f]} {
 		# save position
 		set pos [$w index insert]
@@ -81,6 +86,7 @@ proc read_file_internal {w f} {
 		$w mark set insert $pos
 		after 10 "read_file_internal $w $f"
 	} else {
+		set done_reading 1
 		close $f
 	}
 }
@@ -433,6 +439,47 @@ proc do_remove_file {} {
 	remove_file_name $entry_filename
 }
 
+# mark current filename and positoin
+proc mark_position {letter} {
+	global marked_positions
+	global current_filename
+	set pos [.ctext index insert]
+	dict set marked_positions $letter [list $current_filename $pos]
+	get_ready
+}
+
+# go to marked position
+proc goto_marked {letter} {
+	global marked_positions
+	global done_reading
+	global current_filename
+
+	# get marked position
+	if {[catch {dict get $marked_positions $letter} m]} {
+		# this letter is not used in dict
+		;
+	} else {
+		# filename
+		set f [lindex $m 0]
+		# position
+		set p [lindex $m 1]
+		set w .ctext
+		# marked position is not in current file?
+		if {$current_filename ne $f} {
+			# read file marked in $letter
+			read_file .ctext $f
+			# wait for finish reading a file
+			while {!$done_reading} {
+				vwait done_reading
+			}
+		}
+		# go to position marked in $letter
+		$w mark set insert $p
+		$w yview insert
+	}
+	get_ready
+}
+
 ################################################################
 # variables
 
@@ -459,6 +506,12 @@ set search_forwards 1
 
 # highlight matched string
 set highlighted 1
+
+# after finish to read a file, set this variable to 1
+set done_reading 1
+
+# marked positoins
+set marked_positions [dict create]
 
 ################################################################
 # main window
@@ -523,7 +576,7 @@ foreach seq {f Control-f Control-v space Next} {
 	bind .command <$seq> {do_forward_page}
 }
 foreach seq {b Control-b Alt-v Shift-space Prior} {
-	bind .command <$seq> {do_backward_page}
+	bind .command <$seq> {do_backward_page};
 }
 bind .command <z> {do_forward_page_set}
 bind .command <w> {do_backward_page_set}
@@ -582,10 +635,25 @@ foreach seq {G greater Alt-greater} {
 bind .command <p> {do_goto_percent}
 bind .command <percent> {do_goto_percent}
 
-# set mark
-bind .command <m> {not_implemented do_set_mark}
-# jump mark
-bind .command <apostrophe> {not_implemented do_jump_mark}
+# widget, used for receive mark letter like m<letter>, '<letter>
+pack [labelframe .mark]
+bind .mark <Key> {
+	# check if the key is a modifier key or not
+	if {"%A" eq "{}"} {
+		# modifier key
+		;
+	} else {
+		# bit tricky, run label text as command
+		[.mark cget -text] %A
+		get_ready
+	}
+}
+
+# mark position. text is command name
+bind .command <m> {.mark configure -text "mark_position" ; focus .mark}
+# go to marked position. text is command name
+bind .command <apostrophe> {.mark configure -text "goto_marked" ; focus .mark}
+bind .command <Control-x><Control-x> {.mark configure -text "goto_marked" ; focus .mark}
 
 # miscellaneous commands
 # edit current file with editor
