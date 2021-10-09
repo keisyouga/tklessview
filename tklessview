@@ -556,7 +556,7 @@ pack .ctext -expand yes -fill both
 
 # avoid conflicts with text widget's built-in binding,
 # use invisible widget to receive keyboard event
-pack [label .command]
+pack [frame .command]
 
 # exit program
 bind .command <q> do_quit
