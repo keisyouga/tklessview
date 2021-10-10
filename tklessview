@@ -94,7 +94,7 @@ proc read_file_internal {w f} {
 # prepare commands
 proc get_ready {} {
 	global preceding_number
-	focus .command
+	focus .bar.command
 	set preceding_number ""
 }
 
@@ -579,126 +579,126 @@ pack .ctext -expand yes -fill both
 
 # avoid conflicts with text widget's built-in binding,
 # use invisible widget to receive keyboard event
-pack [frame .command]
+pack [frame .bar.command]
 
 # exit program
-bind .command <q> do_quit
-bind .command <Q> do_quit
-bind .command <colon><q> do_quit
-bind .command <colon><Q> do_quit
-bind .command <Z><Z> do_quit
+bind .bar.command <q> do_quit
+bind .bar.command <Q> do_quit
+bind .bar.command <colon><q> do_quit
+bind .bar.command <colon><Q> do_quit
+bind .bar.command <Z><Z> do_quit
 
 # scrolling
 foreach seq {e Control-e j J Control-n Return Down} {
-	bind .command <$seq> {do_forward_line}
+	bind .bar.command <$seq> {do_forward_line}
 }
 foreach seq {y Control-y k K Control-k Control-p Up} {
-	bind .command <$seq> {do_backward_line}
+	bind .bar.command <$seq> {do_backward_line}
 }
 foreach seq {f Control-f Control-v space Next} {
-	bind .command <$seq> {do_forward_page}
+	bind .bar.command <$seq> {do_forward_page}
 }
 foreach seq {b Control-b Alt-v Shift-space Prior} {
-	bind .command <$seq> {do_backward_page};
+	bind .bar.command <$seq> {do_backward_page};
 }
-bind .command <z> {do_forward_page_set}
-bind .command <w> {do_backward_page_set}
+bind .bar.command <z> {do_forward_page_set}
+bind .bar.command <w> {do_backward_page_set}
 foreach seq {d Control-d} {
-	bind .command <$seq> {do_forward_window_half_set}
+	bind .bar.command <$seq> {do_forward_window_half_set}
 }
 foreach seq {u Control-u} {
-	bind .command <$seq> {do_backward_window_half_set}
+	bind .bar.command <$seq> {do_backward_window_half_set}
 }
 
 # cancel
 bind . <Escape> do_cancel
 
 # number
-bind .command 0 {do_number %K}
-bind .command 1 {do_number %K}
-bind .command 2 {do_number %K}
-bind .command 3 {do_number %K}
-bind .command 4 {do_number %K}
-bind .command 5 {do_number %K}
-bind .command 6 {do_number %K}
-bind .command 7 {do_number %K}
-bind .command 8 {do_number %K}
-bind .command 9 {do_number %K}
+bind .bar.command 0 {do_number %K}
+bind .bar.command 1 {do_number %K}
+bind .bar.command 2 {do_number %K}
+bind .bar.command 3 {do_number %K}
+bind .bar.command 4 {do_number %K}
+bind .bar.command 5 {do_number %K}
+bind .bar.command 6 {do_number %K}
+bind .bar.command 7 {do_number %K}
+bind .bar.command 8 {do_number %K}
+bind .bar.command 9 {do_number %K}
 
 # file examine prompt
-bind .command <colon><e> {focus .bar.fname}
-bind .command <Control-x><Control-v> {focus .bar.fname}
+bind .bar.command <colon><e> {focus .bar.fname}
+bind .bar.command <Control-x><Control-v> {focus .bar.fname}
 # examine next file
-bind .command <colon><n> {do_next_file}
+bind .bar.command <colon><n> {do_next_file}
 # examine previous file
-bind .command <colon><p> {do_previous_file}
+bind .bar.command <colon><p> {do_previous_file}
 # examine nth file
-bind .command <colon><x> {do_nth_file}
+bind .bar.command <colon><x> {do_nth_file}
 # remove file from file list
-bind .command <colon><d> {do_remove_file}
+bind .bar.command <colon><d> {do_remove_file}
 # open (examine) new file
 bind .bar.fname <Return> {do_examine}
 bind .bar.fname <<ComboboxSelected>> {do_examine}
 
 # searching
-bind .command <slash> {do_search_forward}
-bind .command <question> {do_search_backward}
-bind .command <Alt-u> {do_toggle_highlight}
-bind .command <n> {do_repeat_next_search}
-bind .command <N> {do_repeat_previous_search}
+bind .bar.command <slash> {do_search_forward}
+bind .bar.command <question> {do_search_backward}
+bind .bar.command <Alt-u> {do_toggle_highlight}
+bind .bar.command <n> {do_repeat_next_search}
+bind .bar.command <N> {do_repeat_previous_search}
 bind .bar.se <Return> {do_search}
 
 # jumping
 foreach seq {g less Alt-less} {
-	bind .command <$seq> {do_goto_first}
+	bind .bar.command <$seq> {do_goto_first}
 }
 foreach seq {G greater Alt-greater} {
-	bind .command <$seq> {do_goto_last}
+	bind .bar.command <$seq> {do_goto_last}
 }
-bind .command <p> {do_goto_percent}
-bind .command <percent> {do_goto_percent}
+bind .bar.command <p> {do_goto_percent}
+bind .bar.command <percent> {do_goto_percent}
 
 # widget, used for receive mark letter like m<letter>, '<letter>
-pack [labelframe .mark]
-bind .mark <Key> {
+pack [labelframe .bar.mark]
+bind .bar.mark <Key> {
 	# check if the key is a modifier key or not
 	if {"%A" eq "{}"} {
 		# modifier key
 		;
 	} else {
 		# bit tricky, run label text as command
-		[.mark cget -text] %A
+		[.bar.mark cget -text] %A
 		get_ready
 	}
 }
 
 # mark position. text is command name
-bind .command <m> {.mark configure -text "mark_position" ; focus .mark}
+bind .bar.command <m> {.bar.mark configure -text "mark_position" ; focus .bar.mark}
 # go to marked position. text is command name
-bind .command <apostrophe> {.mark configure -text "goto_marked" ; focus .mark}
-bind .command <Control-x><Control-x> {.mark configure -text "goto_marked" ; focus .mark}
+bind .bar.command <apostrophe> {.bar.mark configure -text "goto_marked" ; focus .bar.mark}
+bind .bar.command <Control-x><Control-x> {.bar.mark configure -text "goto_marked" ; focus .bar.mark}
 
 # miscellaneous commands
 # edit current file with editor
-bind .command <v> {not_implemented do_editor}
+bind .bar.command <v> {not_implemented do_editor}
 # version
-bind .command <V> {do_version}
+bind .bar.command <V> {do_version}
 # help
-bind .command <h> {do_help}
-bind .command <H> {do_help}
+bind .bar.command <h> {do_help}
+bind .bar.command <H> {do_help}
 
 # line number
 # toggle line number
-bind .command <minus><N> {
+bind .bar.command <minus><N> {
 	set value [.ctext cget -linemap]
 	.ctext configure -linemap [expr !$value]
 }
 # disable line number
-bind .command <minus><n> { .ctext configure -linemap 0}
+bind .bar.command <minus><n> { .ctext configure -linemap 0}
 
 # wrap long line
 # cycle mode: none => char => word => none => ...
-bind .command <minus><S> {
+bind .bar.command <minus><S> {
 	set mode [.ctext cget -wrap]
 	if {$mode eq "none"} {
 		.ctext configure -wrap char
@@ -709,11 +709,11 @@ bind .command <minus><S> {
 	}
 }
 
-bind .command <Control-minus> {font_resize .ctext -1}
-bind .command <Control-plus> {font_resize .ctext 1}
+bind .bar.command <Control-minus> {font_resize .ctext -1}
+bind .bar.command <Control-plus> {font_resize .ctext 1}
 
 # run tcl command
-bind .command <exclam> "focus .tcl.e"
+bind .bar.command <exclam> "focus .tcl.e"
 
 ################################################################
 # program start
@@ -737,7 +737,7 @@ while 1 {
 }
 
 # wait the command
-focus .command
+focus .bar.command
 
 # Local variables:
 # indent-tabs-mode: t
