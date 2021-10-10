@@ -488,6 +488,17 @@ proc font_resize {w num} {
 	$w configure -font $spec
 }
 
+# change font
+proc apply_font {font} {
+	font configure TkFixedFont {*}[font actual $font]
+}
+
+# select font dialog
+proc select_font {} {
+	tk fontchooser configure -font TkFixedFont -command apply_font
+	tk fontchooser show
+}
+
 ################################################################
 # variables
 
@@ -542,6 +553,10 @@ label .bar.sl -text "/"
 entry .bar.se -textvariable search_string
 pack .bar.sl -side left
 pack .bar.se -side left -expand 1 -fill x
+
+# select font widget
+button .bar.font -text "font..." -command select_font
+pack .bar.font
 
 pack .bar -side top -fill x
 
