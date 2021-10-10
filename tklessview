@@ -480,6 +480,14 @@ proc goto_marked {letter} {
 	get_ready
 }
 
+# set fontsize to current size + $num
+proc font_resize {w num} {
+	set spec [font actual [$w cget -font]]
+	set size [expr [dict get $spec -size] + $num]
+	dict set spec -size $size
+	$w configure -font $spec
+}
+
 ################################################################
 # variables
 
@@ -685,6 +693,9 @@ bind .command <minus><S> {
 		.ctext configure -wrap none
 	}
 }
+
+bind .command <Control-minus> {font_resize .ctext -1}
+bind .command <Control-plus> {font_resize .ctext 1}
 
 # run tcl command
 bind .command <exclam> "focus .tcl.e"
