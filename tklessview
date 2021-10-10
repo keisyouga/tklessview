@@ -673,6 +673,19 @@ bind .command <minus><N> {
 # disable line number
 bind .command <minus><n> { .ctext configure -linemap 0}
 
+# wrap long line
+# cycle mode: none => char => word => none => ...
+bind .command <minus><S> {
+	set mode [.ctext cget -wrap]
+	if {$mode eq "none"} {
+		.ctext configure -wrap char
+	} elseif {$mode eq "char"} {
+		.ctext configure -wrap word
+	} else {
+		.ctext configure -wrap none
+	}
+}
+
 # run tcl command
 bind .command <exclam> "focus .tcl.e"
 
