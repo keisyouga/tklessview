@@ -483,9 +483,9 @@ proc goto_marked {letter} {
 # set fontsize to current size + $num
 proc font_resize {w num} {
 	set spec [font actual [$w cget -font]]
-	set size [expr [dict get $spec -size] + $num]
-	dict set spec -size $size
-	$w configure -font $spec
+	set oldsize [dict get $spec -size]
+	dict set spec -size [expr $oldsize + $num]
+	font configure TkFixedFont {*}$spec
 }
 
 # change font
