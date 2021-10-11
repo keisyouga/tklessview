@@ -87,10 +87,10 @@ proc read_file_internal {w f} {
 	if {![eof $f]} {
 		# save position
 		set pos [$w index insert]
-		$w insert end [read $f 1024]
+		$w insert end [read $f 0x10000]
 		# restore position
 		$w mark set insert $pos
-		after 10 "read_file_internal $w $f"
+		after 100 "read_file_internal $w $f"
 	} else {
 		set done_reading 1
 		close $f
