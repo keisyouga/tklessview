@@ -67,6 +67,8 @@ proc read_file {w name} {
 
 	# erase previous content
 	$w delete 1.0 end
+	# delete `search' tag
+	$w tag delete search
 
 	# cancel previous read_file_internal event
 	foreach i [after info] {
@@ -361,6 +363,11 @@ proc repeat_search {forwards} {
 	set count [get_precedence 1]
 	# current cursor positoin
 	set cur [$w index insert]
+
+	# if no `search' tag, do tag search_string
+	if {[lsearch [$w tag names] search] < 0} {
+		tag_text
+	}
 
 	while {$count > 0} {
 		# search tagname "search"
