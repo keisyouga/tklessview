@@ -42,6 +42,7 @@ proc read_file {w name} {
 	global current_filename
 	global entry_filename
 	global done_reading
+	global coding_system_read
 
 	if {!([file isfile $name] && [file readable $name])} {
 		# remove name from combobox's file list
@@ -54,6 +55,11 @@ proc read_file {w name} {
 	set current_filename $name
 	set entry_filename $name
 	set f [open $current_filename r]
+
+	# set coding system for read
+	if {$coding_system_read ne ""} {
+		fconfigure $f -encoding $coding_system_read
+	}
 
 	# set combobox, label
 	append_file_name $name
@@ -542,6 +548,9 @@ set done_reading 1
 # marked positoins
 set marked_positions [dict create]
 
+# assmue coding system when reading file
+set coding_system_read ""
+
 ################################################################
 # main window
 
@@ -572,7 +581,16 @@ pack .bar.si -side left
 
 # select font widget
 button .bar.font -text "font..." -command select_font
-pack .bar.font
+pack .bar.font -side left
+
+# encoding
+label .bar.el -text "encoding:"
+ttk::combobox .bar.ec -textvariable coding_system_read -values [lsort [encoding names]]
+pack .bar.el .bar.ec -side left
+# reload file
+bind .bar.ec <<ComboboxSelected>> {
+	read_file .ctext $current_filename
+}
 
 pack .bar -side top -fill x
 
