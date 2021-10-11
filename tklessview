@@ -303,13 +303,17 @@ proc do_goto_percent {} {
 proc tag_text {} {
 	global search_string
 	global highlighted
+	global search_regexp
+	global search_ignorecase
 
 	set highlighted 1
 	set w .ctext
-
+	set swtiches "-all -count lengths"
+	if {$search_ignorecase} {lappend swtiches "-nocase"}
+	if {$search_regexp} {lappend swtiches "-regex"}
 	$w tag delete search
 	$w tag configure search -foreground yellow -background red
-	set curs [$w search -regexp -nocase -all -count lengths "$search_string" 1.0 end]
+	set curs [$w search {*}$swtiches "$search_string" 1.0 end]
 	for {set i 0} {[lindex $curs $i] ne ""} {incr i} {
 		$w tag add search [lindex $curs $i] "[lindex $curs $i] + [lindex $lengths $i] char"
 	}
@@ -523,6 +527,12 @@ set search_string ""
 # search direction
 set search_forwards 1
 
+# use regular expression search
+set search_regexp 1
+
+# ignore case in search
+set search_ignorecase 1
+
 # highlight matched string
 set highlighted 1
 
@@ -553,6 +563,12 @@ label .bar.sl -text "/"
 entry .bar.se -textvariable search_string
 pack .bar.sl -side left
 pack .bar.se -side left -expand 1 -fill x
+# search regexp
+checkbutton .bar.sr -text "regexp" -variable search_regexp
+pack .bar.sr -side left
+# search ignore case
+checkbutton .bar.si -text "ignore case" -variable search_ignorecase
+pack .bar.si -side left
 
 # select font widget
 button .bar.font -text "font..." -command select_font
@@ -647,6 +663,10 @@ bind .bar.command <Alt-u> {do_toggle_highlight}
 bind .bar.command <n> {do_repeat_next_search}
 bind .bar.command <N> {do_repeat_previous_search}
 bind .bar.se <Return> {do_search}
+# toggle regexp
+bind .bar.se <Control-r> {set search_regexp [expr !$search_regexp]}
+# toggle ignore case
+bind .bar.command <minus><i> {set search_ignorecase [expr !$search_ignorecase]}
 
 # jumping
 foreach seq {g less Alt-less} {
