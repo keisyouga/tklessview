@@ -628,6 +628,8 @@ foreach seq {u Control-u} {
 
 # cancel
 bind . <Escape> do_cancel
+bind . <Control-c> do_cancel
+bind . <Control-g> do_cancel
 
 # number
 bind .bar.command 0 {do_number %K}
