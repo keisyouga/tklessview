@@ -516,6 +516,41 @@ proc select_font {} {
 	tk fontchooser show
 }
 
+# generate list for filename completion
+proc generate_completion {str} {
+	global completion_list
+	if {$str eq ""} {
+		return
+	}
+	catch {
+		set completion_list [glob -nocomplain "$str*"]
+	}
+	# insert original string to candidates
+	lappend completion_list $str
+}
+
+# return next candidate in completion_list
+proc completion_next {} {
+	global completion_list
+	# shift list {a b c d} => {b c d a}
+	set item [lindex $completion_list 0]
+	set completion_list [lrange $completion_list 1 end]
+	lappend completion_list $item
+
+	return $item
+}
+
+# return previous candidate in completion_list
+proc completion_prev {} {
+	global completion_list
+	# pop list {a b c d} => {d a b c}
+	set item [lindex $completion_list end]
+	set completion_list [lrange $completion_list 0 end-1]
+	set completion_list [linsert $completion_list 0 $item]
+
+	return [lindex $completion_list end]
+}
+
 ################################################################
 # variables
 
@@ -557,6 +592,9 @@ set marked_positions [dict create]
 
 # assmue coding system when reading file
 set coding_system_read ""
+
+# list of filename used for completion
+set completion_list ""
 
 ################################################################
 # main window
@@ -682,6 +720,38 @@ bind .bar.command <colon><d> {do_remove_file}
 # open (examine) new file
 bind .bar.fname <Return> {do_examine}
 bind .bar.fname <<ComboboxSelected>> {do_examine}
+
+# after process <Key> in TCombobox, generate completion list
+bindtags .bar.fname {TCombobox .bar.fname . all}
+bind .bar.fname <Key> {
+	if {"%A" ne "{}"} {
+		generate_completion "$entry_filename"
+	}
+}
+bind .bar.fname <FocusIn> {
+	generate_completion "$entry_filename"
+}
+# complete next
+bind .bar.fname <Control-i> {
+	set entry_filename [completion_next]
+	%W icursor end
+}
+# tab
+# complete next
+bind .bar.fname <<NextWindow>> {
+	set entry_filename [completion_next]
+	%W icursor end
+	# prevent focus next
+	break
+}
+# shift-tab
+# complete previous
+bind .bar.fname <<PrevWindow>> {
+	set entry_filename [completion_prev]
+	%W icursor end
+	# prevent focus next
+	break
+}
 
 # searching
 bind .bar.command <slash> {do_search_forward}
