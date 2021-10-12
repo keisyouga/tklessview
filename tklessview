@@ -249,15 +249,32 @@ proc do_help {} {
 	tk_messageBox -title "help" -message \
 	    "q	quit
 h	help
+0-9	number prefix
 j	forward line
 k	backward line
 f	forward page
 b	backward page
+z	forward page
+	(and set page size)
+w	backward page
+	(and set page size)
+d	forward half-page
+	(and set half-page size)
+u	backward half-page
+	(and set half-page size)
+g	first line
+G	last line
 :e	examine file
+:n	next file
+:p	previous file
 /	search forward
 ?	search backward
 n	repeat search
 N	reverse search
+m<letter>	set mark
+'<letter>	go to mark
+Control+	zoom in
+Control-	zoom out
 "
 }
 
