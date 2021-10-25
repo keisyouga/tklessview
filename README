@@ -1,6 +1,10 @@
 tklessview
   less-like text viewer written in tcl/tk
-  
+
+requirement:
+  tcl/tk
+  ctext (tklib)
+
 usage:
   tclsh tklessview [filename]...
 
