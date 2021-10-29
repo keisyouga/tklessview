@@ -869,6 +869,10 @@ while 1 {
 	}
 }
 
+# make the window become active
+# in ms-windows, the window is not active wish created
+after 1 "wm deiconify . ; focus .ctext"
+
 # wait the command
 focus .ctext
 
