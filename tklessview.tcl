@@ -666,6 +666,9 @@ bind .tcl.e <Return> { eval $tclscript }
 
 # text widget
 ctext .ctext -yscrollcommand ".scroll set" -setgrid true -wrap none
+# remove .ctext bindings in text widget of ctext, so allow to use all text bindings when focus is text widget
+# default: {.ctext .ctext.t Text . all}
+bindtags .ctext.t {.ctext.t Text . all}
 ttk::scrollbar .scroll -command ".ctext yview"
 pack .scroll -side right -fill y
 pack .ctext -expand yes -fill both
