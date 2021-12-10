@@ -479,6 +479,13 @@ proc mark_position {letter} {
 	global current_filename
 	set pos [.ctext index insert]
 	dict set marked_positions $letter [list $current_filename $pos]
+
+	# add color to marked position
+	set w .ctext
+	$w tag delete mark$letter
+	$w tag configure mark$letter -foreground green -background pink
+	$w tag add mark$letter $pos
+
 	get_ready
 }
 
