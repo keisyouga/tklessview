@@ -378,7 +378,7 @@ proc repeat_search {forwards} {
 	set w .ctext
 	# search count
 	set count [get_precedence 1]
-	# current cursor positoin
+	# current cursor position
 	set cur [$w index insert]
 
 	# if no `search' tag, do tag search_string
@@ -473,7 +473,7 @@ proc do_remove_file {} {
 	remove_file_name $entry_filename
 }
 
-# mark current filename and positoin
+# mark current filename and position
 proc mark_position {letter} {
 	global marked_positions
 	global current_filename
@@ -604,7 +604,7 @@ set highlighted 1
 # after finish to read a file, set this variable to 1
 set done_reading 1
 
-# marked positoins
+# marked positions
 set marked_positions [dict create]
 
 # assmue coding system when reading file
