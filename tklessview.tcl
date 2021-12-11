@@ -36,6 +36,79 @@ proc remove_file_name {name} {
 	set_file_number
 }
 
+# data is utf-8 string?
+proc is_utf8 {data} {
+	# data into v as 8-bit unsigned integer
+	set ret [binary scan $data cu* v]
+	if {$ret != 1} {
+		# binary scan failed?
+		return 0
+	}
+
+	set num_char 1;             # 1: first byte
+	foreach x $v {
+		switch -glob $num_char {
+			1 {
+				# first byte of character
+				if {[expr $x < 0b10000000]} {
+					# 7bit ascii
+					set num_char 1
+				} elseif {[expr 0b11000000 <= $x && $x < 0b11100000]} {
+					# first of 2 byte chahacter
+					set num_char 2
+				} elseif {[expr 0b11100000 <= $x && $x < 0b11110000]} {
+					# first of 3 byte chahacter
+					set num_char 3
+				} elseif {[expr 0b11110000 <= $x && $x < 0b11111000]} {
+					# first of 4 byte chahacter
+					set num_char 4
+				} elseif {[expr 0b11111000 <= $x && $x < 0b11111100]} {
+					# first of 5 byte chahacter
+					set num_char 5
+				} elseif {[expr 0b11111100 <= $x && $x < 0b11111110]} {
+					# first of 6 byte chahacter
+					set num_char 6
+				} else {
+					# invalid utf-8
+					return 0
+				}
+			}
+			[23456] {
+				# 2-6th byte of chahacter
+				if {![expr 0b10000000 <= $x && $x <=0b10111111]} {
+					# invalid byte
+					return 0
+				}
+				incr num_char -1
+			}
+			default {
+				# never happen
+				return 0
+			}
+		}
+	}
+	return 1
+}
+
+# read first 1000 byte from channel ch, and guess encoding.
+# currently support utf-8 only, return "utf-8" or "".
+proc guess_encoding {ch} {
+	# store original encoding
+	set orig [fconfigure $ch -encoding]
+	# read as binary data
+	fconfigure $ch -encoding binary
+	set buf [read $ch 1000]
+	# restore channel setting
+	seek $ch 0
+	fconfigure $ch -encoding $orig
+
+	set enc ""
+	if {[is_utf8 $buf]} {
+		set enc "utf-8"
+	}
+	return $enc
+}
+
 # read file and insert its content into text widget
 # return name if success to open file
 proc read_file {w name} {
@@ -57,8 +130,15 @@ proc read_file {w name} {
 	set f [open $current_filename r]
 
 	# set coding system for read
+	# if $coding_system_read is not empty, use it.
+	# otherwise try to guess encoding
 	if {$coding_system_read ne ""} {
 		fconfigure $f -encoding $coding_system_read
+	} else {
+		set enc [guess_encoding $f]
+		if {$enc ne ""} {
+			fconfigure $f -encoding $enc
+		}
 	}
 
 	# set combobox, label
