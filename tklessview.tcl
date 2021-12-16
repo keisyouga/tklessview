@@ -935,6 +935,15 @@ bind .ctext <Control-plus> {font_resize .ctext 1}
 # run tcl command
 bind .ctext <exclam> "focus .tcl.e"
 
+# edit menu
+set m [menu .menu_edit -tearoff 0]
+$m add command -label "cut" -underline 2 -command {event generate [focus] <<Cut>>}
+$m add command -label "copy" -underline 0 -command {event generate [focus] <<Copy>>}
+$m add command -label "paste" -underline 0 -command {event generate [focus] <<Paste>>}
+$m add command -label "delete" -underline 0 -command {event generate [focus] <<Clear>>}
+bind . <3> "tk_popup $m %X %Y"
+bind . <Shift-F10> "tk_popup $m %X %Y"
+
 ################################################################
 # program start
 
