@@ -752,7 +752,7 @@ pack .tcl
 bind .tcl.e <Return> { eval $tclscript }
 
 # text widget
-ctext .ctext -yscrollcommand ".scroll set" -setgrid true -wrap none
+ctext .ctext -yscrollcommand ".scroll set" -setgrid true -wrap none -undo 1
 # remove .ctext bindings in text widget of ctext, so allow to use all text bindings when focus is text widget
 # default: {.ctext .ctext.t Text . all}
 bindtags .ctext.t {.ctext.t Text . all}
