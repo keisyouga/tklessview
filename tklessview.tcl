@@ -141,6 +141,13 @@ proc read_file {w name} {
 		}
 	}
 
+	# add decompress transformation to channel for *.gz file.
+	# zlib push don't support seeking, so place this code after guess_encoding
+	# which uses seek.
+	if {[string match "*.gz" $name]} {
+		zlib push gunzip $f
+	}
+
 	# set combobox, label
 	append_file_name $name
 	set_file_number
